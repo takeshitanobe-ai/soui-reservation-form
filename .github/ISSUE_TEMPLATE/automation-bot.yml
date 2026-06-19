@@ -1,0 +1,67 @@
+name: Bot・自動化
+about: 予約補助、LINE連携、集計、通知、業務効率化ツールを作りたい時に使う
+labels: ["Bot/自動化"]
+title: "[Bot/自動化] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        現場の負担を減らし、スタッフが再現できる仕組みにするためのテンプレートです。
+        機密情報・個人情報は書かず、必要ならダミー例で書いてください。
+
+  - type: dropdown
+    id: purpose
+    attributes:
+      label: 目的
+      options:
+        - 予約対応を楽にする
+        - LINE対応を楽にする
+        - 売上・比率の確認を楽にする
+        - スタッフ教育を楽にする
+        - 投稿・文章作成を楽にする
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: manual_work
+    attributes:
+      label: 今、人が手作業でやっていること
+      placeholder: 例：LINE予約の内容を見て、メニュー相談が必要か毎回判断している。
+    validations:
+      required: true
+
+  - type: textarea
+    id: ideal_flow
+    attributes:
+      label: 理想の流れ
+      placeholder: 例：フォーム送信後に内容を整理し、ヘッドスパ相談が必要な人だけ通知したい。
+    validations:
+      required: true
+
+  - type: textarea
+    id: input_output
+    attributes:
+      label: 入力と出力
+      description: 何を入れたら、何が出てほしいかを書いてください。
+      placeholder: 例：入力は予約フォーム回答。出力はLINE通知用の要約文。
+    validations:
+      required: true
+
+  - type: textarea
+    id: staff_use
+    attributes:
+      label: 誰がどう使うか
+      placeholder: 例：受付スタッフが毎朝確認する。スマホで見られる形がよい。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: operation_check
+    attributes:
+      label: 運用チェック
+      options:
+        - label: 田野辺さんだけが触る仕組みになっていない
+        - label: スタッフが見ても分かる言葉で使える
+        - label: 毎日・毎週の現場作業が減る
+        - label: 月次黒字化、トリートメント、ヘッドスパ、店販のどれかに効く
