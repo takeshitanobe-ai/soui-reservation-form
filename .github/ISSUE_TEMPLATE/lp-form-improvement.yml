@@ -1,0 +1,69 @@
+name: LP・予約フォーム改善
+about: LP、予約フォーム、LINE導線、メニュー訴求を改善したい時に使う
+labels: ["LP/フォーム改善"]
+title: "[LP/フォーム改善] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sou-iの優先順位に沿って、改善目的を先に揃えるためのテンプレートです。
+        顧客名・スタッフ評価・個別売上などの機密情報は書かないでください。
+
+  - type: dropdown
+    id: priority_goal
+    attributes:
+      label: 今回いちばん上げたいもの
+      options:
+        - 月次黒字化
+        - トリートメント比率
+        - ヘッドスパ比率
+        - 店販購入者比率
+        - 採用・教育の仕組み化
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_problem
+    attributes:
+      label: 今困っていること
+      description: 現場で起きている問題を短く書いてください。
+      placeholder: 例：予約フォームではヘッドスパの価値が伝わらず、通常メニューだけ選ばれやすい。
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired_change
+    attributes:
+      label: 変えたいこと
+      description: 画面・文章・ボタン・導線など、変更したい内容を書いてください。
+      placeholder: 例：ヘッドスパ相談を選びやすくし、LINE相談へのボタンを追加したい。
+    validations:
+      required: true
+
+  - type: textarea
+    id: target_customer
+    attributes:
+      label: 対象のお客様
+      placeholder: 例：白髪・細毛・疲れ・頭皮の悩みがある40代以上の女性。
+    validations:
+      required: false
+
+  - type: textarea
+    id: success_check
+    attributes:
+      label: 成功の判断基準
+      description: 数字で見られる場合は数字も書いてください。
+      placeholder: 例：ヘッドスパ相談のクリック数、LINE予約数、フォーム完了率が増える。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: soui_check
+    attributes:
+      label: Sou-iチェック
+      options:
+        - label: 安売り・値引きに頼らない
+        - label: スタッフが説明・再現できる
+        - label: 田野辺さんだけの負担にならない
+        - label: 利益が残る方向になっている
