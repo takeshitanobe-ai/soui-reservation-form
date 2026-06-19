@@ -1,0 +1,57 @@
+name: 計測・成果確認
+about: 広告、LINE、予約フォーム、クリック計測、成果確認を整えたい時に使う
+labels: ["計測"]
+title: "[計測] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        何が効いているかを見えるようにするためのテンプレートです。
+        個別のお客様情報や内部の細かい売上情報は書かないでください。
+
+  - type: dropdown
+    id: target_flow
+    attributes:
+      label: 計測したい導線
+      options:
+        - Google広告 → LP → LINE
+        - Google広告 → LP → 予約フォーム
+        - SNS → LINE
+        - 予約フォーム内の選択項目
+        - 店販・メニュー相談
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: 今見えていること・見えていないこと
+      placeholder: 例：広告クリック数は分かるが、LINE追加や予約につながった数が分からない。
+    validations:
+      required: true
+
+  - type: textarea
+    id: needed_metrics
+    attributes:
+      label: 見たい数字
+      placeholder: 例：LINEボタンクリック数、フォーム開始数、フォーム完了数、ヘッドスパ相談の選択数。
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_decision
+    attributes:
+      label: その数字で判断したいこと
+      placeholder: 例：広告を続けるか、LPの見出しを変えるか、LINE導線を強めるか判断したい。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: 情報管理チェック
+      options:
+        - label: 顧客名などの個人情報を書いていない
+        - label: スタッフ別の評価・賃金情報を書いていない
+        - label: 公開リポジトリに置いてよい内容だけを書いている
