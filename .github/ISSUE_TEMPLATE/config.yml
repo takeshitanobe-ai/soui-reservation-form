@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Codexに相談してから整理する
+    url: https://github.com/takeshitanobe-ai/soui-reservation-form/issues
+    about: まだ依頼内容が固まっていない場合は、先にCodexとの壁打ちで目的と優先順位を整理してください。
