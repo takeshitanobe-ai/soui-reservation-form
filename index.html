@@ -224,6 +224,9 @@
       const pattern = new RegExp(hours.color_perm_pattern || "カラー|パーマ|ストレート");
       return pattern.test(menu || "") ? hours.last_reception_color_perm : hours.last_reception_default;
     }
+    function formatDateTime(d) {
+      return d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "/" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+    }
     function allowedTimes(hours, d, menu) {
       const toMin = (t) => { const [h, m] = String(t).split(":").map(Number); return h * 60 + m; };
       const start = toMin(opensEarly(hours, d) ? hours.weekend_holiday_open : hours.weekday_open);
@@ -319,7 +322,26 @@
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime || new Date(), menuSelect.value) });
         },
         onSelectDate: function (currentTime) {
-          this.setOptions({ allowTimes: allowedTimes(hours, currentTime, menuSelect.value) });
+          const picker = this;
+          const times = allowedTimes(hours, currentTime, menuSelect.value);
+          picker.setOptions({ allowTimes: times });
+          // 日付だけ選んで時間を押していない場合、その日の最初の枠に寄せる（例：10:59 → 平日10:00／土日祝9:30）
+          // プラグインが日付クリック後に値を書き戻すので、その後（setTimeout 0）に上書きする
+          const hm = pad2(currentTime.getHours()) + ":" + pad2(currentTime.getMinutes());
+          if (!times.includes(hm)) {
+            const [h, m] = times[0].split(":").map(Number);
+            const snapped = new Date(currentTime.getTime());
+            snapped.setHours(h, m, 0, 0);
+            setTimeout(function () {
+              picker.data("xdsoft_datetime").setCurrentTime(snapped);
+              $(".schedule").each(function () {
+                const owner = $(this).data("xdsoft_datetimepicker");
+                if (owner && owner[0] === picker[0]) {
+                  $(this).val(formatDateTime(snapped));
+                }
+              });
+            }, 0);
+          }
         },
         onChangeDateTime: function (currentTime) {
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime || new Date(), menuSelect.value) });
