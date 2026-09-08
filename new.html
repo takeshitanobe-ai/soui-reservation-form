@@ -221,7 +221,9 @@
 
     async function main() {
       const config = await loadConfig();
-      const cfg = config.forms && config.forms[FORM_KEY] ? config.forms[FORM_KEY] : config.forms.repeat;
+      // 2026-09-08 取得したJSONに自分のフォーム（FORM_KEY）が無い時は、別フォーム（repeat）へ流さず自分の予備設定を使う
+      const fallbackForm = FALLBACK_CONFIG.forms[FORM_KEY];
+      const cfg = config && config.forms && config.forms[FORM_KEY] ? config.forms[FORM_KEY] : fallbackForm;
       document.title = cfg.title || "Sou-i 予約フォーム";
       document.getElementById("topNotice").textContent = cfg.top_notice || "";
       document.getElementById("dateNotice").textContent = cfg.date_notice || "";
