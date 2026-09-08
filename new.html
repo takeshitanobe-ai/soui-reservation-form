@@ -314,13 +314,14 @@
         scrollTime: false,
         validateOnBlur: false,
         beforeShowDay: (date) => [!isClosedDay(hours, date), ""],
+        // onGenerate は再描画のたびに古い日付で上書きするので使わない（2026-09-08 ライブ検証）
         onShow: function (currentTime) {
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime || new Date(), menuSelect.value) });
         },
         onSelectDate: function (currentTime) {
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime, menuSelect.value) });
         },
-        onGenerate: function (currentTime) {
+        onChangeDateTime: function (currentTime) {
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime || new Date(), menuSelect.value) });
         }
       });
