@@ -179,8 +179,25 @@
             "n": 3
           }
         ],
-        "closed_dates": [],
-        "closed_dates_note": "臨時休業（年末年始・研修日など）。YYYY-MM-DD を足すと、その日はカレンダーで選べなくなる。祝日一覧とは別",
+        "closed_dates": [
+          "2027-01-01",
+          "2027-01-02",
+          "2027-01-03",
+          "2027-01-04",
+          "2027-01-05"
+        ],
+        "closed_dates_note": "臨時休業（年末年始・研修日など）。YYYY-MM-DD を足すと、その日はカレンダーで選べなくなる。祝日一覧・open_dates より優先",
+        "open_dates": [
+          "2026-12-08",
+          "2026-12-28"
+        ],
+        "open_dates_note": "定休日でも営業する日（例：12月の第2火曜・最後の月曜）。YYYY-MM-DD を足すと選べるようになる",
+        "special_hours": {
+          "2026-12-31": {
+            "last_reception": "13:00"
+          }
+        },
+        "special_hours_note": "その日だけの受付時間。open＝開店、last_reception＝全メニューの最終受付、last_reception_default／last_reception_color_perm＝メニュー別に分ける時",
         "holidays": [
           "2026-09-21",
           "2026-09-22",
@@ -217,23 +234,32 @@
     function dateKey(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
     function nthWeekdayOfMonth(d) { return Math.floor((d.getDate() - 1) / 7) + 1; }
     function isHoliday(hours, d) { return (hours.holidays || []).includes(dateKey(d)); }
+    function specialHours(hours, d) { return (hours.special_hours || {})[dateKey(d)] || null; } // その日だけの受付時間（2026-09-09）
     function isClosedDay(hours, d) {
       if ((hours.closed_dates || []).includes(dateKey(d))) return true; // 臨時休業（2026-09-09）
+      if ((hours.open_dates || []).includes(dateKey(d))) return false; // 定休日でも営業する日（2026-09-09）
       if ((hours.closed_weekdays || []).includes(d.getDay())) return true;
       return (hours.closed_nth || []).some((r) => r.weekday === d.getDay() && r.n === nthWeekdayOfMonth(d));
     }
     function opensEarly(hours, d) { return d.getDay() === 0 || d.getDay() === 6 || isHoliday(hours, d); }
-    function lastReception(hours, menu) {
+    function lastReception(hours, menu, d) {
       const pattern = new RegExp(hours.color_perm_pattern || "カラー|パーマ|ストレート");
-      return pattern.test(menu || "") ? hours.last_reception_color_perm : hours.last_reception_default;
+      const isColorPerm = pattern.test(menu || "");
+      const sp = d ? specialHours(hours, d) : null;
+      if (sp) {
+        const v = isColorPerm ? (sp.last_reception_color_perm || sp.last_reception) : (sp.last_reception_default || sp.last_reception);
+        if (v) return v;
+      }
+      return isColorPerm ? hours.last_reception_color_perm : hours.last_reception_default;
     }
     function formatDateTime(d) {
       return d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "/" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
     }
     function allowedTimes(hours, d, menu, now) {
       const toMin = (t) => { const [h, m] = String(t).split(":").map(Number); return h * 60 + m; };
-      const start = toMin(opensEarly(hours, d) ? hours.weekend_holiday_open : hours.weekday_open);
-      const end = toMin(lastReception(hours, menu));
+      const sp = specialHours(hours, d);
+      const start = toMin(sp && sp.open ? sp.open : (opensEarly(hours, d) ? hours.weekend_holiday_open : hours.weekday_open));
+      const end = toMin(lastReception(hours, menu, d));
       const step = hours.step_minutes || 30;
       // 当日は、すでに過ぎた時間の枠を出さない（2026-09-09）
       const ref = now || new Date();
