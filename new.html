@@ -179,6 +179,8 @@
             "n": 3
           }
         ],
+        "closed_dates": [],
+        "closed_dates_note": "臨時休業（年末年始・研修日など）。YYYY-MM-DD を足すと、その日はカレンダーで選べなくなる。祝日一覧とは別",
         "holidays": [
           "2026-09-21",
           "2026-09-22",
@@ -203,7 +205,7 @@
           "2027-11-03",
           "2027-11-23"
         ],
-        "holidays_note": "祝日は毎年12月に翌年分を足す（土日祝は9:30開店）。年末年始の休みは店の決定後に holidays へ追加"
+        "holidays_note": "祝日は毎年12月に翌年分を足す（土日祝は9:30開店）。年末年始などの休みは holidays ではなく closed_dates へ"
       }
     }; // 2026-09-08 本番 form-config.json と同一（取得失敗時も同じ案内にする・hours を含む）
 
@@ -216,6 +218,7 @@
     function nthWeekdayOfMonth(d) { return Math.floor((d.getDate() - 1) / 7) + 1; }
     function isHoliday(hours, d) { return (hours.holidays || []).includes(dateKey(d)); }
     function isClosedDay(hours, d) {
+      if ((hours.closed_dates || []).includes(dateKey(d))) return true; // 臨時休業（2026-09-09）
       if ((hours.closed_weekdays || []).includes(d.getDay())) return true;
       return (hours.closed_nth || []).some((r) => r.weekday === d.getDay() && r.n === nthWeekdayOfMonth(d));
     }
@@ -227,15 +230,23 @@
     function formatDateTime(d) {
       return d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "/" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
     }
-    function allowedTimes(hours, d, menu) {
+    function allowedTimes(hours, d, menu, now) {
       const toMin = (t) => { const [h, m] = String(t).split(":").map(Number); return h * 60 + m; };
       const start = toMin(opensEarly(hours, d) ? hours.weekend_holiday_open : hours.weekday_open);
       const end = toMin(lastReception(hours, menu));
       const step = hours.step_minutes || 30;
+      // 当日は、すでに過ぎた時間の枠を出さない（2026-09-09）
+      const ref = now || new Date();
+      const nowMin = dateKey(d) === dateKey(ref) ? ref.getHours() * 60 + ref.getMinutes() : -1;
       const out = [];
-      for (let m = start; m <= end; m += step) out.push(pad2(Math.floor(m / 60)) + ":" + pad2(m % 60));
+      for (let m = start; m <= end; m += step) {
+        if (m <= nowMin) continue;
+        out.push(pad2(Math.floor(m / 60)) + ":" + pad2(m % 60));
+      }
       return out;
     }
+    function hasSlots(hours, d, menu) { return !isClosedDay(hours, d) && allowedTimes(hours, d, menu).length > 0; }
+    const DATE_TIME_RE = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}$/;
 
     function asList(value) {
       return Array.isArray(value) ? value : [];
@@ -316,7 +327,8 @@
         minDate: 0,
         scrollTime: false,
         validateOnBlur: false,
-        beforeShowDay: (date) => [!isClosedDay(hours, date), ""],
+        // 定休日・臨時休業・当日で枠が残っていない日は選べない
+        beforeShowDay: (date) => [hasSlots(hours, date, menuSelect.value), ""],
         // onGenerate は再描画のたびに古い日付で上書きするので使わない（2026-09-08 ライブ検証）
         onShow: function (currentTime) {
           this.setOptions({ allowTimes: allowedTimes(hours, currentTime || new Date(), menuSelect.value) });
@@ -325,6 +337,7 @@
           const picker = this;
           const times = allowedTimes(hours, currentTime, menuSelect.value);
           picker.setOptions({ allowTimes: times });
+          if (!times.length) return;
           // 日付だけ選んで時間を押していない場合、その日の最初の枠に寄せる（例：10:59 → 平日10:00／土日祝9:30）
           // プラグインが日付クリック後に値を書き戻すので、その後（setTimeout 0）に上書きする
           const hm = pad2(currentTime.getHours()) + ":" + pad2(currentTime.getMinutes());
@@ -350,6 +363,13 @@
       const liffReady = await initLiff(cfg.liff_id);
       document.getElementById("reservationForm").addEventListener("submit", (event) => {
         event.preventDefault();
+        // 第１希望は必ず選んでもらう（2026-09-09）。第２・第３は任意
+        const first = event.currentTarget.schedule1;
+        if (!DATE_TIME_RE.test(first.value)) {
+          alert("第１希望の日時を選んでください。");
+          first.focus();
+          return;
+        }
         sendText(buildMessage(event.currentTarget, cfg), liffReady);
       });
       document.getElementById("loading").hidden = true;
