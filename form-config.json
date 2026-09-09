@@ -98,8 +98,25 @@
         "n": 3
       }
     ],
-    "closed_dates": [],
-    "closed_dates_note": "臨時休業（年末年始・研修日など）。YYYY-MM-DD を足すと、その日はカレンダーで選べなくなる。祝日一覧とは別",
+    "closed_dates": [
+      "2027-01-01",
+      "2027-01-02",
+      "2027-01-03",
+      "2027-01-04",
+      "2027-01-05"
+    ],
+    "closed_dates_note": "臨時休業（年末年始・研修日など）。YYYY-MM-DD を足すと、その日はカレンダーで選べなくなる。祝日一覧・open_dates より優先",
+    "open_dates": [
+      "2026-12-08",
+      "2026-12-28"
+    ],
+    "open_dates_note": "定休日でも営業する日（例：12月の第2火曜・最後の月曜）。YYYY-MM-DD を足すと選べるようになる",
+    "special_hours": {
+      "2026-12-31": {
+        "last_reception": "13:00"
+      }
+    },
+    "special_hours_note": "その日だけの受付時間。open＝開店、last_reception＝全メニューの最終受付、last_reception_default／last_reception_color_perm＝メニュー別に分ける時",
     "holidays": [
       "2026-09-21",
       "2026-09-22",
