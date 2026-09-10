@@ -67,6 +67,13 @@
 
         <input type="submit" class="mt-4 btn btn-primary btn-submit" value="送信">
       </form>
+      <!-- 2026-09-11 自動送信できなかった時の逃げ道：内容を表示してトークに貼り付けてもらう -->
+      <section id="fallbackArea" class="mt-4 p-3 border rounded" hidden>
+        <p id="fallbackMsg" class="font-weight-bold mb-2"></p>
+        <textarea id="fallbackText" class="form-control" rows="9" readonly></textarea>
+        <button type="button" id="copyBtn" class="mt-2 btn btn-outline-secondary">予約内容をコピー</button>
+        <p class="mt-2 mb-0">コピーしたら、この画面を閉じてトーク画面に貼り付けて送信してください。担当より折り返しご連絡します。</p>
+      </section>
     </section>
   </main>
 
@@ -317,14 +324,38 @@
       }
     }
 
+    // 2026-09-11 自動送信できない時は、内容を画面に出して「トークに貼り付け」で送ってもらう
+    // （liff.sendMessages はトーク画面から開いたLIFFブラウザ以外・許可未承認では 403 で失敗する）
+    function showFallback(why, text) {
+      document.getElementById("fallbackMsg").textContent = why;
+      document.getElementById("fallbackText").value = text;
+      const area = document.getElementById("fallbackArea");
+      area.hidden = false;
+      area.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    function copyFallbackText() {
+      const ta = document.getElementById("fallbackText");
+      const done = () => alert("コピーしました。トーク画面に貼り付けて送信してください。");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(done).catch(() => { ta.select(); document.execCommand("copy"); done(); });
+      } else {
+        ta.select(); document.execCommand("copy"); done();
+      }
+    }
     function sendText(text, liffReady) {
       if (!liffReady) {
-        alert("LINE内で開くと送信できます。\n\n確認用メッセージ:\n" + text);
+        showFallback("この画面からは自動送信ができませんでした。LINEのトーク画面から開くとそのまま送信できます。お手数ですが、下の内容をトークに貼り付けて送信してください。", text);
         return;
       }
       liff.sendMessages([{ type: "text", text }])
         .then(() => liff.closeWindow())
-        .catch((error) => alert("送信できませんでした: " + error));
+        .catch((error) => {
+          const detail = String((error && (error.message || error)) || "");
+          const why = /403|permission|grant/i.test(detail)
+            ? "送信の許可がされていないため、自動送信できませんでした。お手数ですが、下の内容をトーク画面に貼り付けて送信してください。（LINEの許可画面で「トークにメッセージを送信」を許可すると、次回から自動で送れます）"
+            : "自動送信できませんでした（" + detail + "）。お手数ですが、下の内容をトーク画面に貼り付けて送信してください。";
+          showFallback(why, text);
+        });
     }
 
     function buildMessage(form, cfg) {
@@ -405,6 +436,7 @@
         }
         sendText(buildMessage(event.currentTarget, cfg), liffReady);
       });
+      document.getElementById("copyBtn").addEventListener("click", copyFallbackText);
       document.getElementById("loading").hidden = true;
       document.getElementById("formArea").hidden = false;
     }
