@@ -19,6 +19,20 @@
       line-height: 1.45;
       white-space: pre-line;
     }
+    .alert-notice {
+      margin: 0 auto 22px;
+      padding: 18px 14px;
+      max-width: 860px;
+      border: 3px solid #c2453a;
+      border-radius: 12px;
+      background: #fff3f1;
+      color: #a3261c;
+      text-align: center;
+      font-size: clamp(19px, 4.6vw, 34px);
+      font-weight: 800;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
     .date-notice {
       margin: 28px 0 12px;
       font-size: clamp(18px, 3.8vw, 32px);
@@ -36,6 +50,7 @@
   <main class="form-wrap">
     <div id="loading" class="loading">フォームを読み込んでいます...</div>
     <section id="formArea" hidden>
+      <div id="alertNotice" class="alert-notice" hidden></div>
       <div id="topNotice" class="notice"></div>
       <form id="reservationForm">
         <label for="name">お名前</label>
@@ -131,7 +146,7 @@
           "title": "‘24/4からご来店のお客様",
           "liff_id": "2010458222-j4t11ZrN",
           "top_notice": "営業時間は、平日 10:00〜18:30／土日 9:30〜18:30です。\n最終受付はカット17:30／カラー・パーマ16:00です。\n定休日は月曜・第2火曜・第3日曜です。\n\nカットのみをご希望の方は、カット＋頭皮ケアスパコース（男性 ¥8,800／90分・女性 ¥9,500／120分）でのご案内になります。\n\nお子様（中学生以下）の新規ご予約はお受けしていません。高校生以上はご予約いただけます。\n※ロイヤル会員様のお子様はご予約いただけます。",
-          "date_notice": "受付時間は、平日 10:00〜／土日祝 9:30〜、30分きざみでお選びいただけます。\n最終受付はカット17:30／カラー・パーマ16:00です。定休日（月曜・第2火曜・第3日曜）は選べません。\nできる限り第３希望までのご入力をお願い致します。",
+          "date_notice": "受付時間は、平日 10:00〜／土日祝 9:30〜、30分きざみでお選びいただけます。\n最終受付はカット17:30／カラー・パーマ16:00です。定休日（月曜・第2火曜・第3日曜）は選べません。\n別の日を2つ以上、必ずご入力ください（第３希望もいただけると、さらにご案内しやすくなります）。\n直近の土日だけでなく、平日や少し先の日もふくめてお選びください。\n定休日・営業時間外にいただいたご予約は、翌営業日以降に順番にご連絡いたします。",
           "remarks_label": "ご希望・ご相談はこちら",
           "remarks_help": "上記のご希望日時以外にもご来店可能な日時があればご記入下さい。",
           "thanks_message": "ご入力ありがとうございます。\n日時が確定しましたら、\n担当よりご連絡をさせて頂きます。\n今しばらくお待ちくださいませ。\n\nSou-i hair face＆eye",
@@ -163,7 +178,10 @@
             "佐藤 真由美",
             "武田 葵",
             "佐野 仁美"
-          ]
+          ],
+          "alert_notice": "ただいま、直近のご予約は\nたいへん取りづらく\nなっております。\n特に土日は混み合っています。\n\n少し先の日程もふくめて、\n別の日を2つ以上\nご入力ください。",
+          "min_distinct_days": 2,
+          "min_distinct_days_message": "別の日を2つ以上お選びください。\n直近のご予約は取りづらいため、少し先の日程もふくめてお選びください。"
         }
       },
       "hours": {
@@ -376,6 +394,9 @@
       const fallbackForm = FALLBACK_CONFIG.forms[FORM_KEY];
       const cfg = config && config.forms && config.forms[FORM_KEY] ? config.forms[FORM_KEY] : fallbackForm;
       document.title = cfg.title || "Sou-i 予約フォーム";
+      const alertEl = document.getElementById("alertNotice");
+      alertEl.textContent = cfg.alert_notice || "";
+      alertEl.hidden = !cfg.alert_notice;
       document.getElementById("topNotice").textContent = cfg.top_notice || "";
       document.getElementById("dateNotice").textContent = cfg.date_notice || "";
       document.getElementById("remarksLabel").textContent = cfg.remarks_label || "ご希望・ご相談はこちら";
@@ -433,6 +454,18 @@
           alert("第１希望の日時を選んでください。");
           first.focus();
           return;
+        }
+        // 2026-10-28 田野辺さん：別の日を2つ以上選べばOK（第３希望は任意）。min_distinct_days が無いフォーム（repeat）は今までどおり
+        const minDays = Number(cfg.min_distinct_days || 0);
+        if (minDays > 1) {
+          const days = [1, 2, 3]
+            .map((i) => event.currentTarget["schedule" + i].value)
+            .filter((v) => DATE_TIME_RE.test(v))
+            .map((v) => v.slice(0, 10));
+          if (new Set(days).size < minDays) {
+            alert(cfg.min_distinct_days_message || "別の日を2つ以上お選びください。");
+            return;
+          }
         }
         sendText(buildMessage(event.currentTarget, cfg), liffReady);
       });
